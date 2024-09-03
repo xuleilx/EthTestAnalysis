@@ -101,21 +101,28 @@ def check_file_exists(file_path):
 # 提取参考报文和实际报文中的序列
 def scan_directory(reference_dir, actual_dir):
     # 遍历目录下的所有文件和子目录
+    files_pair =[]
     for root, dirs, files in os.walk(actual_dir):
         for file in files:
             # 构建文件的完整路径
-            print(f"{file} ", end='')
             reference_file = os.path.join(reference_dir, file)
             actual_file = os.path.join(actual_dir, file)
             if not os.path.exists(reference_file):
-                print(f"\033[31m[NG]\033[0m\n\t{reference_file} not exist.")
-                continue
-            reference_sequence = extract_sequence(reference_file)
-            actual_sequence = extract_sequence(actual_file)
-            # 对比序列
-            compare_sequences(reference_sequence, actual_sequence)
+                files_pair.append({'ref': "", 'act': actual_file})
+            else:
+                files_pair.append({'ref': reference_file,'act': actual_file})
+    return files_pair
 
-
-# 使用示例，指定要扫描的目录路径
-scan_directory('TC8StandardPacket', 'TC8TestResult')
-# scan_directory(r'E:\00_work\Ethernet\TestResult\TCP_2023-10-10_19-49-27', r'D:\tmp\test_result')
+if __name__ == "__main__":
+    # 使用示例，指定要扫描的目录路径
+    files_pair = scan_directory('TC8StandardPacket', 'TC8TestResult')
+    #files_pair = scan_directory(r'E:\00_work\Ethernet\TestResult\TCP_2023-10-10_19-49-27', r'D:\tmp\test_result')
+    for file in files_pair:
+        print(f"{os.path.basename(file['act'])} ", end='')
+        if file['ref'] == "":
+            print(f"\033[31m[NG]\033[0m\n\t Standard packet not exist, should check by yourself.")
+            continue
+        reference_sequence = extract_sequence(file['ref'])
+        actual_sequence = extract_sequence(file['act'])
+        # 对比序列
+        compare_sequences(reference_sequence, actual_sequence)
